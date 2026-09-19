@@ -37,6 +37,22 @@ jobs:
           rm -f .github/workflows/bootstrap-binance-trading-bot.yml
           rm -f .github/workflows/import-binance-trading-bot.yml
 
+      - name: Apply typecheck fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i "s/import Decimal from 'decimal.js';/import { Decimal } from 'decimal.js';/" src/server/binance/filters.ts src/server/risk.ts
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("src/server/index.ts")
+          s=p.read_text()
+          old="  reply.code(status).send({error:'REQUEST_FAILED',message:error.message});"
+          new="  reply.code(status).send({error:'REQUEST_FAILED',message:(error as Error).message});"
+          if old not in s:
+              raise SystemExit("index.ts patch target not found")
+          p.write_text(s.replace(old,new))
+          PY
+
       - name: Write repository CI
         shell: bash
         run: |
@@ -56,7 +72,7 @@ jobs:
                   with:
                     node-version: 22
                     cache: npm
-                - run: npm install
+                - run: npm ci
                 - run: npm run check
           YAML
 
