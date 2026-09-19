@@ -1,4 +1,4 @@
-import Decimal from 'decimal.js';
+import { Decimal } from 'decimal.js';
 import { binance } from './binance/client.js';
 import { floorToStep } from './binance/filters.js';
 import { getRiskSettings } from './db.js';

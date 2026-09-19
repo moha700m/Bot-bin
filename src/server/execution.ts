@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { binance } from './binance/client.js';
 import { floorToStep, roundToTick } from './binance/filters.js';
-import { audit, getPlan, getRiskSettings, savePlan, setSignalStatus } from './db.js';
+import { audit, getPlan, savePlan, setSignalStatus } from './db.js';
 import { config, liveTradingEnabled } from './config.js';
 import { validateNewTrade } from './risk.js';
 import type { BinancePosition, PositionPlan, Side, Signal } from './types.js';
@@ -100,6 +100,7 @@ export async function protectExisting(input:{symbol:string;stop:number;tp1:numbe
     if(previous) savePlan(previous);
     throw error;
   }
+  // Replacement orders are installed before old ones are removed so the position is never intentionally unprotected.
   if (liveTradingEnabled) {
     if (previous?.stopAlgoId && previous.stopAlgoId!==plan.stopAlgoId) { try { await binance.cancelAlgo(previous.stopAlgoId); } catch { /* may already be gone */ } }
     if (previous?.finalTpAlgoId && previous.finalTpAlgoId!==plan.finalTpAlgoId) { try { await binance.cancelAlgo(previous.finalTpAlgoId); } catch { /* may already be gone */ } }
@@ -117,6 +118,7 @@ export async function moveStop(symbol:string,newStop:number):Promise<PositionPla
   const oldStopAlgoId=plan.stopAlgoId;
   const next:PositionPlan={...plan,stop:newStop,stopAlgoId:undefined,updatedAt:Date.now()};
   if(liveTradingEnabled){
+    // Place the tighter replacement first, then remove the old order.
     await installStop(next);
     if(oldStopAlgoId && oldStopAlgoId!==next.stopAlgoId){ try { await binance.cancelAlgo(oldStopAlgoId); } catch { /* stale */ } }
   } else {

@@ -20,6 +20,7 @@ export async function suggestProtection(symbol:string):Promise<{symbol:string;si
   const a=atr(ks.slice(0,-1));
   const entry=Number(pos.entryPrice), mark=Number(pos.markPrice);
   if(!(a>0)) throw new Error('تعذر حساب ATR');
+  // For already-profitable positions, keep the protective stop between entry and current price where feasible.
   const rawStop=side==='LONG' ? mark-1.35*a : mark+1.35*a;
   const stop=side==='LONG' ? (mark>entry+0.8*a?Math.max(entry,rawStop):rawStop) : (mark<entry-0.8*a?Math.min(entry,rawStop):rawStop);
   const risk=Math.max(a*1.35,Math.abs(entry-stop));

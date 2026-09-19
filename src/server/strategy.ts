@@ -55,6 +55,7 @@ async function evaluate(c:Candidate): Promise<Signal|undefined> {
   ]);
   if (k5.length < 25 || k15.length < 12 || taker.length < 3) return;
 
+  // Use only completed candles: the newest item may still be open.
   const closed = k5.slice(0,-1);
   const last = closed.at(-1)!;
   const previous = closed.slice(-21,-1);
@@ -76,7 +77,7 @@ async function evaluate(c:Candidate): Promise<Signal|undefined> {
   const side:Side = longBreak ? 'LONG' : 'SHORT';
   const breakout = longBreak ? prevHigh : prevLow;
   const extension = Math.abs(close-breakout)/a;
-  if (extension > 0.85) return;
+  if (extension > 0.85) return; // avoid chasing
 
   const stop = side==='LONG' ? Math.min(low, close-1.35*a) : Math.max(high, close+1.35*a);
   const risk=Math.abs(close-stop);

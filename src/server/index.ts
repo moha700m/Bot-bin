@@ -32,7 +32,7 @@ if(config.NODE_ENV==='production'){
 app.setErrorHandler((error,_req,reply)=>{
   app.log.error(error);
   const status=(error as any).statusCode && (error as any).statusCode<500 ? (error as any).statusCode : 400;
-  reply.code(status).send({error:'REQUEST_FAILED',message:error.message});
+  reply.code(status).send({error:'REQUEST_FAILED',message:(error as Error).message});
 });
 
 const shutdown=async(signal:string)=>{
