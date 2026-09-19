@@ -37,11 +37,12 @@ jobs:
           rm -f .github/workflows/bootstrap-binance-trading-bot.yml
           rm -f .github/workflows/import-binance-trading-bot.yml
 
-      - name: Apply typecheck fixes
+      - name: Apply verification fixes
         shell: bash
         run: |
           set -euo pipefail
           sed -i "s/import Decimal from 'decimal.js';/import { Decimal } from 'decimal.js';/" src/server/binance/filters.ts src/server/risk.ts
+          sed -i "s/audit, getPlan, getRiskSettings, savePlan, setSignalStatus/audit, getPlan, savePlan, setSignalStatus/" src/server/execution.ts
           python - <<'PY'
           from pathlib import Path
           p=Path("src/server/index.ts")
