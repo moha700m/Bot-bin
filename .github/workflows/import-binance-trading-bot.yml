@@ -26,6 +26,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          cp .github/workflows/import-binance-trading-bot.yml /tmp/import-workflow.yml
           rm -rf /tmp/source /tmp/project
           git clone --depth 1 --branch binance-trading-bot https://github.com/moha700m/New-newtwor.git /tmp/source
           cat /tmp/source/.bootstrap/binance-trading-bot.part-*.b64 | base64 -d > /tmp/project.tar.gz
@@ -34,8 +35,9 @@ jobs:
           tar -xzf /tmp/project.tar.gz -C /tmp/project
           test -f /tmp/project/binance-trading-bot/package.json
           cp -a /tmp/project/binance-trading-bot/. ./
-          rm -f .github/workflows/bootstrap-binance-trading-bot.yml
-          rm -f .github/workflows/import-binance-trading-bot.yml
+          rm -rf .github
+          mkdir -p .github/workflows
+          cp /tmp/import-workflow.yml .github/workflows/import-binance-trading-bot.yml
 
       - name: Apply verification fixes
         shell: bash
@@ -54,36 +56,13 @@ jobs:
           p.write_text(s.replace(old,new))
           PY
 
-      - name: Write repository CI
-        shell: bash
-        run: |
-          mkdir -p .github/workflows
-          cat > .github/workflows/ci.yml <<'YAML'
-          name: trading-bot-ci
-          on:
-            push:
-              branches: [main]
-            pull_request:
-          jobs:
-            check:
-              runs-on: ubuntu-latest
-              steps:
-                - uses: actions/checkout@v4
-                - uses: actions/setup-node@v4
-                  with:
-                    node-version: 22
-                    cache: npm
-                - run: npm ci
-                - run: npm run check
-          YAML
-
       - name: Install dependencies
         run: npm install
 
       - name: Full verification
         run: npm run check
 
-      - name: Commit exact validated project
+      - name: Commit validated project
         shell: bash
         run: |
           set -euo pipefail
